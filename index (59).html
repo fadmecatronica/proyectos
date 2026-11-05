@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Protocolos de Monitoreo</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--ink:#1d2330;--mut:#5d6677;--line:#d8dce4;--acc:#1f5fbf;--acc2:#e8f0fc}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+header.top{background:#16213a;color:#fff;padding:10px 16px}
+header.top h1{margin:0 0 8px;font-size:17px}
+nav{display:flex;gap:6px;flex-wrap:wrap}
+nav button{background:#27365a;color:#dbe4f7;border:0;padding:8px 12px;border-radius:6px;cursor:pointer;font-size:14px}
+nav button.on{background:#fff;color:#16213a;font-weight:600}
+.bar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:10px 16px;background:#fff;border-bottom:1px solid var(--line)}
+.bar button,.bar label.btn{border:1px solid var(--line);background:#fff;padding:7px 11px;border-radius:6px;cursor:pointer;font-size:14px;color:var(--ink)}
+.bar button.pri{background:var(--acc);color:#fff;border-color:var(--acc)}
+.bar input[type=file]{display:none}
+#status{margin-left:auto;color:var(--mut);font-size:13px}
+main{max-width:1100px;margin:16px auto;padding:0 12px}
+#sheet,#recs{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px}
+#recs{margin-bottom:14px}
+#recs h2{margin:0 0 8px;font-size:16px}
+.rec{display:flex;gap:8px;align-items:center;padding:6px 0;border-top:1px solid var(--line)}
+.rec span.n{flex:1}
+.rec small{color:var(--mut)}
+h1.t{margin:0 0 2px;font-size:22px}
+.pdate{display:none;color:var(--mut);font-size:12px;margin-bottom:8px}
+h2.s{font-size:16px;margin:22px 0 8px;padding-bottom:4px;border-bottom:2px solid var(--acc2)}
+p.note{margin:0 0 8px;color:var(--mut);font-size:13px}
+.fields{display:grid;grid-template-columns:200px 1fr;gap:6px 10px;align-items:start}
+.fields label{font-weight:600;padding-top:6px}
+textarea,input[type=number]{width:100%;font:inherit;color:inherit;border:1px solid var(--line);border-radius:5px;padding:5px 7px;background:#fff;resize:none;overflow:hidden}
+textarea:focus,input:focus{outline:2px solid var(--acc);outline-offset:-1px}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+th,td{border:1px solid var(--line);padding:3px;vertical-align:top;text-align:left}
+th{background:var(--acc2);font-size:13px;padding:6px}
+td.c-check{text-align:center;vertical-align:middle;width:70px}
+td.c-check input{width:20px;height:20px}
+td.c-num{width:100px}
+td.c-calc{text-align:right;white-space:nowrap;padding:8px 6px;font-weight:600}
+td textarea,td input[type=number]{border-color:transparent}
+.total{text-align:right;font-weight:700;margin-top:6px}
+.chk{display:flex;gap:8px;align-items:flex-start;margin:3px 0}
+.chk input[type=checkbox]{width:20px;height:20px;margin-top:5px;flex:none}
+.chk textarea{border-color:transparent}
+.chk.done textarea{text-decoration:line-through;color:var(--mut)}
+.chk b{display:block;margin-top:8px}
+button.x{border:0;background:transparent;color:#b3261e;font-size:18px;cursor:pointer;padding:0 6px}
+button.add{margin-top:6px;border:1px dashed var(--acc);background:#fff;color:var(--acc);padding:6px 10px;border-radius:6px;cursor:pointer}
+footer{max-width:1100px;margin:12px auto 30px;padding:0 12px;color:var(--mut);font-size:13px}
+input[type=number]{-moz-appearance:textfield}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+td.c-bar{white-space:nowrap;padding:8px 6px;font-family:ui-monospace,Consolas,monospace;font-size:12px;letter-spacing:-1px;color:var(--acc)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin-top:10px}
+.card{text-align:left;border:1px solid var(--line);background:#fff;border-radius:10px;padding:14px;cursor:pointer;font:inherit;color:var(--ink);display:flex;flex-direction:column;gap:4px}
+.card:hover{border-color:var(--acc);background:var(--acc2)}
+.card b{font-size:16px}
+.card span{color:var(--mut);font-size:13px}
+body.home #bNew,body.home #bSave,body.home #bDown,body.home #bPrint{display:none}
+@media (max-width:640px){.fields{grid-template-columns:1fr}.fields label{padding-top:0}}
+@page{size:A4;margin:12mm}
+@media print{
+ body{background:#fff;font-size:11px}
+ header.top,.bar,footer,#recs,.noprint{display:none!important}
+ main{max-width:none;margin:0;padding:0}
+ #sheet{border:0;padding:0}
+ .pdate{display:block}
+ .tw{overflow:visible}
+ textarea,input[type=number]{border-color:transparent!important;padding:1px 2px}
+ th,td{border-color:#999}
+ th{background:#eee!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ h2.s{border-bottom:1px solid #999;break-after:avoid}
+ tr,.chk{break-inside:avoid}
+ table{font-size:10px}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Protocolos de Monitoreo</h1>
+  <nav id="nav"></nav>
+</header>
+<div class="bar">
+  <button id="bNew">Nueva hoja</button>
+  <button id="bSave" class="pri">Guardar registro</button>
+  <button id="bRecs">Registros guardados</button>
+  <button id="bDown">Descargar archivo (.json)</button>
+  <label class="btn">Cargar archivo<input type="file" id="fLoad" accept=".json,application/json"></label>
+  <button id="bPrint" class="pri">Imprimir / PDF</button>
+  <span id="status"></span>
+</div>
+<main>
+  <section id="recs" hidden></section>
+  <section id="sheet"></section>
+</main>
+<footer>
+  Los datos se guardan automáticamente en este navegador y dispositivo (no se envían a ningún servidor).
+  Para pasar una hoja a otra persona o dispositivo, usá "Descargar archivo" o imprimila a PDF.
+</footer>
+
+<script>
+"use strict";
+/* ============ DEFINICIÓN DE LOS FORMULARIOS (editable) ============
+   Para cambiar textos, ítems de listas o filas iniciales, editá esta parte.
+   Tipos de sección: fields (campos), table (tabla), list (checklist).
+   Tipos de columna: texto (por defecto), num, check, calc (producto de dos columnas). */
+const CK = n => ({n, t:'check'});
+const NUM = n => ({n, t:'num'});
+
+const FORMS = {
+  obra: {
+    title: 'Hoja de obra diaria',
+    sections: [
+      {type:'fields', title:'Datos de la obra', fields:['Cliente / sitio','Fecha y hora de salida','Trabajo a realizar','Técnicos','Contacto en el sitio']},
+      {type:'table', title:'Materiales que hacen falta', blank:3,
+        cols:['Material','Cant. necesaria','Cant. cargada',CK('Cargado')],
+        rows:[['Cable'],['Fichas / conectores'],['Cajas estancas'],['Precintos'],['Tornillería y tarugos']]},
+      {type:'table', title:'Herramientas', blank:2,
+        note:'Tengo = la tengo disponible. Llevo = la cargo para esta obra.',
+        cols:['Herramienta',CK('Tengo'),CK('Llevo'),'Nota (batería, estado)'],
+        rows:[['Tester / multímetro'],['Taladro y mechas'],['Baterías cargadas'],['Atornilladores'],['Crimpeadora y pelacables'],['Pinza de corte'],['Escalera'],['Linterna'],['Notebook y cargador'],['Alargue']]},
+      {type:'list', title:'Antes de salir y al terminar',
+        items:['Materiales y herramientas recontados','Fotos del estado inicial','Pruebas hechas con el cliente','Área limpia y fotos finales','Sobrantes y faltantes anotados']}
+    ]
+  },
+  revision: {
+    title: 'Hoja de revisión de monitoreo',
+    sections: [
+      {type:'fields', title:'Datos de la revisión', fields:['Cliente / sitio','Fecha y hora','Sistema a revisar','Técnicos','Contacto en el sitio']},
+      {type:'table', title:'Equipamiento que llevamos', blank:2,
+        cols:['Ítem','Cant.',CK('Cargado al salir'),CK('De vuelta al terminar'),'Nota'],
+        rows:[['Mesa'],['Sillas'],['TV'],['Cable HDMI'],['Adaptador HDMI a VGA'],['Adaptador HDMI a micro HDMI'],['Teclado'],['Mouse'],['Caja de herramientas']]},
+      {type:'table', title:'Qué se revisa', blank:5,
+        cols:['Punto a revisar','Estado','Observación'], rows:[]},
+      {type:'list', title:'Antes de salir y al terminar',
+        items:['Equipamiento recontado antes de salir','Fotos del estado inicial','Revisión hecha y observaciones anotadas','Equipamiento recontado al terminar (nada queda en el sitio)','Informe enviado']}
+    ]
+  },
+  bom: {
+    title: 'Lista de materiales (BOM)',
+    sections: [
+      {type:'fields', title:'Datos del proyecto', fields:['Cliente / proyecto','N.º de orden','Fecha','Responsable']},
+      {type:'table', title:'Materiales', blank:3,
+        note:'Cant. a comprar = cómputo + margen (sugerido 10 %; cables, conectores y consumibles redondeados hacia arriba). El subtotal y el total se calculan solos.',
+        cols:['Cód.','Categoría','Descripción','Un.',NUM('Cant. cómputo'),NUM('Cant. a comprar'),'Proveedor',NUM('Costo unit.'),{n:'Subtotal',t:'calc',calc:[5,7]},CK('En depósito'),CK('Prueba banco')],
+        rows:[
+          ['M-001','Sensores','Sensor de temperatura/humedad','u'],
+          ['M-002','Sensores','Sensor de contacto / puerta','u'],
+          ['M-003','Control','Controlador / datalogger','u'],
+          ['M-004','Comunicaciones','Gateway / router 4G','u'],
+          ['M-005','Energía','Fuente de alimentación 12 VCC','u'],
+          ['M-006','Energía','UPS / batería de respaldo','u'],
+          ['M-007','Cableado','Cable UTP Cat6','m'],
+          ['M-008','Cableado','Cable apantallado 2 x 0,5 mm²','m'],
+          ['M-009','Conectores','Fichas RJ45','u'],
+          ['M-010','Conectores','Bornes de conexión / regletas','u'],
+          ['M-011','Instalación','Caja estanca IP65','u'],
+          ['M-012','Instalación','Prensacables / prensaestopas','u'],
+          ['M-013','Instalación','Canaleta / caño y accesorios','m'],
+          ['M-014','Consumibles','Precintos plásticos (surtido)','u'],
+          ['M-015','Consumibles','Tornillería y tarugos (surtido)','kit'],
+          ['M-016','Consumibles','Termocontraíble y cinta aisladora','kit'],
+          ['M-017','Consumibles','Etiquetas de rotulado','u']]},
+      {type:'list', title:'Reglas de la BOM',
+        items:['Ningún equipo sale del depósito sin la prueba de banco tildada','Todo faltante se informa a Compras el mismo día de la recepción']}
+    ]
+  },
+  checklist: {
+    title: 'Checklist 48 hs / 24 hs / día de obra',
+    sections: [
+      {type:'fields', title:'Datos de la obra', fields:['Cliente / sitio','Fecha de la obra','Responsable']},
+      {type:'list', title:'48 hs antes', items:[
+        'Orden de trabajo y alcance revisados por todo el equipo',
+        'Contacto en el sitio confirmado (nombre, teléfono, horario)',
+        'Permisos, ingreso de personal y requisitos de seguridad tramitados',
+        'Planos y diagrama descargados o impresos',
+        'Materiales críticos verificados contra la BOM',
+        'Equipos con prueba de banco aprobada y firmware actualizado',
+        'Consumibles verificados: cables, conectores, precintos, cajas estancas, tornillería',
+        'Faltantes informados a Compras con fecha de reposición',
+        'Vehículo asignado y plan B definido si falla un equipo crítico']},
+      {type:'list', title:'24 hs antes', items:[
+        'Baterías de taladros, atornilladores y linternas cargadas (mínimo 2 por herramienta)',
+        'Herramientas probadas: testers, taladros, crimpeadora, certificador de red',
+        'Kit de consumibles armado y contado',
+        'Equipos y cajas rotulados por zona y embalados',
+        'Notebook con software, usuarios y contraseñas del proyecto',
+        'Cargador del celular, power bank y cable de datos',
+        'EPP completo (casco, guantes, anteojos, calzado, arnés si hay altura)',
+        'Cliente avisado de la hora de llegada',
+        'Pronóstico del clima revisado']},
+      {type:'list', title:'Día de obra: antes de salir', items:[
+        'Kits recontados contra el checklist de 24 hs',
+        'Notebook, cargadores y planos a bordo',
+        'Cliente avisado: salida confirmada']},
+      {type:'list', title:'Día de obra: en el sitio', items:[
+        'Presentarse con el contacto y revisar el área de trabajo',
+        'Verificar seguridad y energía eléctrica disponible',
+        'Fotografiar el estado inicial',
+        'Tender y rotular cable antes de conectar',
+        'Probar continuidad de cada punto con el tester antes de energizar',
+        'Registrar desvíos respecto del plano (para el as-built)',
+        'Pruebas funcionales con el cliente y alarmas verificadas',
+        'Orden y limpieza, fotos finales',
+        'Informe de cierre enviado el mismo día']}
+    ]
+  },
+  soporte: {
+    title: 'Soporte ante fallas',
+    sections: [
+      {type:'fields', title:'Datos del incidente', fields:['Cliente / sistema','Fecha y hora del aviso','Síntoma reportado','Prioridad (P1 a P4)','Contacto']},
+      {type:'list', title:'Paso 1: Diagnóstico remoto', items:[
+        '¿Qué cambió? (corte de luz, obra, mudanza de equipos, cambio de router)',
+        'Alimentación verificada en el sitio (UPS, fuentes, luces de estado)',
+        'Conectividad: el equipo responde (ping, nube, VPN) / hay señal 4G',
+        'Último dato recibido y historial de eventos revisados',
+        'Alcance identificado: un sensor, una zona o todo el sistema',
+        'Reinicio remoto o reconfiguración probados',
+        'Si no se recupera en 30 min (P1) o hay hardware implicado: escalar a campo']},
+      {type:'table', title:'Paso 2: Kit de repuestos de emergencia', blank:2,
+        cols:['Ítem','Para qué falla','Cant.',CK('Cargado')],
+        rows:[
+          ['Fuente de alimentación 12 VCC','Equipo sin energía','1'],
+          ['Sensor de repuesto (cada tipo instalado)','Sensor sin lectura o fuera de rango','1'],
+          ['Controlador / datalogger configurado','Equipo central no responde','1'],
+          ['Gateway / router 4G y SIM de respaldo','Pérdida de comunicación','1'],
+          ['Cable UTP patch y fichas RJ45','Cable o conector dañado','5'],
+          ['Fusibles y bornes','Cortocircuito o mal contacto','10'],
+          ['Precintos, cinta y termocontraíble','Fijación y reparación','1 kit'],
+          ['Tester, probador de red y notebook','Diagnóstico en el lugar','1'],
+          ['Copia de configuración y credenciales','Restaurar el sistema','1']]},
+      {type:'list', title:'Paso 3: Asistencia en campo', items:[
+        'Cliente avisado de la hora estimada y a quién buscar',
+        'Historial y planos as-built revisados antes de intervenir',
+        'Estado inicial fotografiado',
+        'Falla aislada: alimentación, cableado, sensor o equipo',
+        'Pieza fallada reemplazada, lo nuevo rotulado, lo retirado guardado',
+        'Prueba funcional con el cliente, incluidas las alarmas',
+        'Informe técnico: causa raíz, acción, repuestos usados, recomendación',
+        'Kit de emergencia repuesto el mismo día']}
+    ]
+  }
+};
+FORMS.nuevo = {
+  title: 'Nuevo monitoreo (EDT y Gantt)',
+  desc: 'Protocolo 1: desde que entra la orden hasta la entrega. Diseño, cómputo, compra, instalación.',
+  sections: [
+    {type:'fields', title:'Datos del proyecto', fields:['Cliente / sitio','N.º de orden','Fecha de ingreso de la orden (D1)','Fecha compromiso de entrega','Responsable del proyecto']},
+    {type:'table', title:'Fases y tareas (Gantt, días hábiles D1 a D20)', blank:2,
+      note:'Resp.: IP = Ingeniero de Proyectos, TC = Técnico de campo, CO = Compras, DP = Depósito. Cambiá los días de inicio y fin y la barra se actualiza sola.',
+      cols:['Cód.','Tarea','Resp.','Entregable',NUM('Inicio (día)'),NUM('Fin (día)'),{n:'Cronograma D1-D20',t:'bar',bar:[4,5]},CK('Hecha')],
+      rows:[
+        ['1.1','Recepción: registrar orden y reunión de arranque','IP','Ficha de proyecto abierta','1','1'],
+        ['2.1','Diseño: relevamiento del sitio','IP / TC','Informe con fotos y medidas','1','2'],
+        ['2.2','Diseño: definición de requisitos','IP','Documento de requisitos','2','3'],
+        ['2.3','Diseño: arquitectura y topología','IP','Diagrama de arquitectura','3','4'],
+        ['2.4','Diseño: planos, canalización y rotulado','IP','Planos y tabla de rótulos','4','5'],
+        ['2.5','Diseño: revisión y aprobación del cliente','IP','Diseño firmado','5','6'],
+        ['3.1','Cómputo de cables, canalización y puntos','IP','Planilla de cómputo','5','6'],
+        ['3.2','Armado de la BOM con margen','IP','BOM v1','6','6'],
+        ['3.3','Presupuesto y aprobación de compra','IP / CO','Presupuesto aprobado','7','7'],
+        ['4.1','Compra: órdenes de compra a proveedores','CO','OC emitidas','7','8'],
+        ['4.2','Compra: seguimiento de entrega','CO','Confirmación de fechas','8','12'],
+        ['4.3','Depósito: recepción y control contra BOM','DP','Remito conformado, faltantes informados','12','12'],
+        ['4.4','Depósito: pruebas de banco y preconfiguración','TC / DP','Planilla de pruebas de banco','12','14'],
+        ['4.5','Depósito: embalaje, rotulado y carga','DP','Kits rotulados por zona','14','14'],
+        ['5.1','Checklist de 48 hs y 24 hs','IP / TC','Checklists completos','13','14'],
+        ['5.2','Instalación: montaje físico','TC','Equipos y canalización fijados','15','16'],
+        ['5.3','Instalación: cableado y conexionado','TC','Puntos rotulados y probados con tester','16','17'],
+        ['5.4','Instalación: puesta en marcha y configuración','TC','Sistema en línea, alarmas configuradas','17','18'],
+        ['5.5','Entrega: pruebas funcionales con el cliente','IP / TC','Protocolo de pruebas firmado','18','19'],
+        ['5.6','Entrega: capacitación y acta de entrega','IP','Acta, manual y planos as-built','19','20']]},
+    {type:'list', title:'Puntos de control (no se avanza sin cumplirlos)',
+      items:['Fin de diseño: el cliente aprobó el diseño por escrito antes de comprar','Fin de compra: la BOM está completa o los faltantes tienen fecha confirmada','Fin de banco: todos los equipos pasaron prueba de banco antes de salir a obra','Fin de instalación: protocolo de pruebas firmado antes del acta de entrega']}
+  ]
+};
+FORMS.acta = {
+  title: 'Acta de entrega',
+  desc: 'Cierre de la obra: pruebas aprobadas, documentación entregada y firmas.',
+  sections: [
+    {type:'fields', title:'Datos de la entrega', fields:['Cliente / sitio','N.º de orden de trabajo','Fecha de entrega','Sistema entregado','Observaciones','Firma del cliente (nombre y aclaración)','Firma del técnico responsable']},
+    {type:'list', title:'Conformidad', items:['Pruebas funcionales aprobadas','Alarmas verificadas con el cliente','Manual entregado','Planos as-built entregados','Credenciales y accesos entregados','Contacto de soporte informado']}
+  ]
+};
+FORMS.soporte.sections.splice(1, 0, {type:'table', title:'Prioridades y tiempos de respuesta', blank:0,
+  note:'Punto de partida: ajustalo a los acuerdos de servicio con cada cliente.',
+  cols:['Prioridad','Criterio','Respuesta remota','Visita en campo'],
+  rows:[
+    ['P1 Crítica','Sistema caído o alarma crítica sin monitoreo','30 min','Mismo día'],
+    ['P2 Alta','Funcionamiento parcial (sensores sin datos, comunicación intermitente)','2 h','24 h'],
+    ['P3 Media','Falla puntual sin riesgo inmediato','1 día hábil','Programada'],
+    ['P4 Baja','Consulta o ajuste','2 días hábiles','A coordinar']]});
+FORMS.obra.desc = 'Día de obra común: materiales que hacen falta y herramientas (tengo / llevo).';
+FORMS.revision.desc = 'Revisión de un monitoreo en sitio: equipamiento que se lleva y se trae de vuelta.';
+FORMS.bom.desc = 'Lista de materiales con cantidades, proveedor, costos y subtotales automáticos.';
+FORMS.checklist.desc = 'Protocolo 2: qué hacer 48 hs antes, 24 hs antes y el día de obra.';
+FORMS.soporte.desc = 'Protocolo 3: diagnóstico remoto, kit de repuestos de emergencia y asistencia en campo.';
+/* ============ FIN DE LA DEFINICIÓN ============ */
+
+const $ = s => document.querySelector(s);
+const store = {
+  get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); return true; }catch(e){ return false; } },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} },
+  keys(){ const a=[]; try{ for(let i=0;i<localStorage.length;i++) a.push(localStorage.key(i)); }catch(e){} return a; }
+};
+const colName = c => typeof c === 'string' ? c : c.n;
+const colType = c => typeof c === 'string' ? 'text' : (c.t || 'text');
+const num = x => parseFloat(x) || 0;
+const fmt = v => v ? v.toLocaleString('es-AR',{maximumFractionDigits:2}) : '';
+
+function el(tag, props, kids){
+  const e = document.createElement(tag);
+  for(const k in (props||{})){
+    if(k==='class') e.className = props[k];
+    else if(k.startsWith('on')) e[k] = props[k];
+    else if(k==='value'||k==='checked'||k==='type'||k==='rows'||k==='title'||k==='step') e[k] = props[k];
+    else e.setAttribute(k, props[k]);
+  }
+  [].concat(kids===undefined?[]:kids).forEach(c => { if(c!==null && c!==undefined && c!=='') e.append(c); });
+  return e;
+}
+function fit(t){ t.style.height='auto'; t.style.height=(t.scrollHeight+2)+'px'; }
+function fitAll(){ document.querySelectorAll('#sheet textarea').forEach(fit); }
+
+function initRow(cols, vals){
+  return cols.map((c,i) => colType(c)==='check' ? !!vals[i] : (vals[i]===undefined ? '' : String(vals[i])));
+}
+function initState(f){
+  const s = {};
+  f.sections.forEach((sec,i) => {
+    if(sec.type==='fields'){ s[i]={}; sec.fields.forEach(n => s[i][n]=''); }
+    else if(sec.type==='table'){
+      const rows = sec.rows.map(r => initRow(sec.cols, r));
+      for(let k=0;k<(sec.blank||0);k++) rows.push(initRow(sec.cols, []));
+      s[i] = rows;
+    } else s[i] = sec.items.map(t => ({t, c:false}));
+  });
+  return s;
+}
+
+let cur = 'obra';
+let state = null;
+let calcs = [];
+let totals = [];
+
+function draftKey(id){ return 'draft:'+id; }
+function validState(f, s){
+  if(!s || typeof s !== 'object') return false;
+  return f.sections.every((sec, i) => {
+    const v = s[i];
+    if(sec.type==='fields') return v && typeof v === 'object' && !Array.isArray(v);
+    if(sec.type==='table') return Array.isArray(v) && v.every(r => Array.isArray(r) && r.length === sec.cols.length);
+    return Array.isArray(v) && v.every(it => it && typeof it.t === 'string');
+  });
+}
+function loadDraft(id){
+  const raw = store.get(draftKey(id));
+  if(raw){ try{ const s = JSON.parse(raw); if(validState(FORMS[id], s)) return s; }catch(e){} }
+  return initState(FORMS[id]);
+}
+function stamp(){ return new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}); }
+function save(){
+  if(cur==='home' || !state) return;
+  const ok = store.set(draftKey(cur), JSON.stringify(state));
+  $('#status').textContent = ok ? 'Guardado automático ' + stamp() : 'No se pudo guardar en este navegador';
+}
+
+function barText(s, e){
+  s = Math.round(num(s)); e = Math.round(num(e));
+  if(s < 1 || e < s) return '';
+  let out = '';
+  for(let d = 1; d <= 20; d++) out += (d >= s && d <= e) ? '▰' : '▱';
+  return out;
+}
+function updateCalcs(){
+  calcs.forEach(o => {
+    const r = state[o.si][o.ri];
+    if(o.bar) o.span.textContent = barText(r[o.a], r[o.b]);
+    else o.span.textContent = fmt(num(r[o.a]) * num(r[o.b]));
+  });
+  totals.forEach(o => {
+    let sum = 0;
+    state[o.si].forEach(r => { sum += num(r[o.a]) * num(r[o.b]); });
+    o.node.textContent = 'Total: ' + fmt(sum);
+  });
+}
+
+function textarea(value, onin, ph){
+  const t = el('textarea', {rows:1, value:value, placeholder:ph||''});
+  t.addEventListener('input', () => { onin(t.value); fit(t); });
+  return t;
+}
+
+function renderFields(sec, si){
+  const wrap = el('div', {class:'fields'});
+  sec.fields.forEach(n => {
+    wrap.append(el('label', {}, n));
+    wrap.append(textarea(state[si][n] || '', v => { state[si][n]=v; save(); }));
+  });
+  return wrap;
+}
+
+function renderTable(sec, si){
+  const rows = state[si];
+  const thead = el('tr', {}, [...sec.cols.map(c => el('th', {}, colName(c))), el('th', {class:'noprint'}, '')]);
+  const tbody = rows.map((r, ri) => el('tr', {}, [
+    ...sec.cols.map((c, ci) => {
+      const t = colType(c);
+      let node;
+      if(t==='check'){
+        node = el('input', {type:'checkbox', checked:!!r[ci]});
+        node.addEventListener('change', () => { r[ci]=node.checked; save(); });
+      } else if(t==='num'){
+        node = el('input', {type:'number', step:'any', value:r[ci]});
+        node.addEventListener('input', () => { r[ci]=node.value; save(); updateCalcs(); });
+      } else if(t==='calc'){
+        node = el('span', {});
+        calcs.push({span:node, si, ri, a:c.calc[0], b:c.calc[1]});
+      } else if(t==='bar'){
+        node = el('span', {});
+        calcs.push({span:node, si, ri, a:c.bar[0], b:c.bar[1], bar:true});
+      } else {
+        node = textarea(r[ci], v => { r[ci]=v; save(); });
+      }
+      return el('td', {class:'c-'+t}, node);
+    }),
+    el('td', {class:'noprint'}, el('button', {class:'x', title:'Borrar fila', onclick:() => { rows.splice(ri,1); save(); render(); }}, '×'))
+  ]));
+  const wrap = el('div', {}, [
+    sec.note ? el('p', {class:'note'}, sec.note) : null,
+    el('div', {class:'tw'}, el('table', {}, [el('thead', {}, thead), el('tbody', {}, tbody)])),
+  ]);
+  const calcCol = sec.cols.find(c => colType(c)==='calc');
+  if(calcCol){
+    const tot = el('div', {class:'total'});
+    totals.push({node:tot, si, a:calcCol.calc[0], b:calcCol.calc[1]});
+    wrap.append(tot);
+  }
+  wrap.append(el('button', {class:'add noprint', onclick:() => { rows.push(initRow(sec.cols, [])); save(); render(); }}, '+ Agregar fila'));
+  return wrap;
+}
+
+function renderList(sec, si){
+  const items = state[si];
+  const wrap = el('div', {});
+  items.forEach((it, ii) => {
+    const cb = el('input', {type:'checkbox', checked:!!it.c});
+    const ta = textarea(it.t, v => { it.t = v; save(); });
+    const row = el('div', {class:'chk' + (it.c ? ' done' : '')}, [
+      cb, ta,
+      el('button', {class:'x noprint', title:'Borrar ítem', onclick:() => { items.splice(ii,1); save(); render(); }}, '×')
+    ]);
+    cb.addEventListener('change', () => { it.c = cb.checked; row.classList.toggle('done', cb.checked); save(); });
+    wrap.append(row);
+  });
+  wrap.append(el('button', {class:'add noprint', onclick:() => { items.push({t:'', c:false}); save(); render(); }}, '+ Agregar ítem'));
+  return wrap;
+}
+
+const ORDER = ['nuevo','bom','checklist','obra','revision','soporte','acta'];
+function renderHome(){
+  document.body.classList.add('home');
+  const sheet = $('#sheet');
+  sheet.innerHTML = '';
+  sheet.append(el('h1', {class:'t'}, '¿Qué vas a hacer?'));
+  sheet.append(el('p', {class:'note'}, 'Elegí un formulario. Cada uno se guarda solo, se puede imprimir a PDF y descargar al dispositivo.'));
+  const grid = el('div', {class:'grid'});
+  ORDER.forEach(id => {
+    grid.append(el('button', {class:'card', onclick:() => show(id)}, [
+      el('b', {}, FORMS[id].title),
+      el('span', {}, FORMS[id].desc || '')
+    ]));
+  });
+  sheet.append(grid);
+  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.id==='home'));
+}
+function render(){
+  if(cur==='home'){ renderHome(); return; }
+  document.body.classList.remove('home');
+  const f = FORMS[cur];
+  const base = initState(f);
+  f.sections.forEach((sec, i) => { if(!state[i]) state[i] = base[i]; });
+  calcs = []; totals = [];
+  const sheet = $('#sheet');
+  sheet.innerHTML = '';
+  sheet.append(el('h1', {class:'t'}, f.title));
+  sheet.append(el('div', {class:'pdate'}, 'Impreso el ' + new Date().toLocaleDateString('es-AR') + ' ' + stamp()));
+  f.sections.forEach((sec, si) => {
+    sheet.append(el('h2', {class:'s'}, sec.title));
+    if(sec.type==='fields') sheet.append(renderFields(sec, si));
+    else if(sec.type==='table') sheet.append(renderTable(sec, si));
+    else sheet.append(renderList(sec, si));
+  });
+  updateCalcs();
+  requestAnimationFrame(fitAll);
+  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.id===cur));
+}
+
+function show(id){
+  cur = id;
+  state = id==='home' ? null : loadDraft(id);
+  render();
+  window.scrollTo(0,0);
+}
+
+/* ---- Registros guardados ---- */
+function records(){
+  const a = [];
+  store.keys().forEach(k => {
+    if(k.startsWith('rec:')){
+      try{ a.push(JSON.parse(store.get(k))); }catch(e){}
+    }
+  });
+  return a.sort((x,y) => (y.savedAt||'').localeCompare(x.savedAt||''));
+}
+function renderRecords(){
+  const box = $('#recs');
+  box.innerHTML = '';
+  box.append(el('h2', {}, 'Registros guardados en este dispositivo'));
+  const list = records();
+  if(!list.length) box.append(el('p', {class:'note'}, 'Todavía no hay registros. Completá una hoja y tocá "Guardar registro".'));
+  list.forEach(r => {
+    box.append(el('div', {class:'rec'}, [
+      el('span', {class:'n'}, [r.name + ' ', el('small', {}, '(' + (FORMS[r.form] ? FORMS[r.form].title : r.form) + ', ' + new Date(r.savedAt).toLocaleString('es-AR') + ')')]),
+      el('button', {onclick:() => { openRecord(r); }}, 'Abrir'),
+      el('button', {onclick:() => { if(confirm('¿Borrar este registro?')){ store.del('rec:'+r.id); renderRecords(); } }}, 'Borrar')
+    ]));
+  });
+}
+function openRecord(r){
+  if(!FORMS[r.form] || !validState(FORMS[r.form], r.state)){ alert('Este registro es de una versión anterior del formulario y no se puede abrir.'); return; }
+  cur = r.form;
+  state = r.state;
+  save();
+  render();
+  $('#recs').hidden = true;
+  window.scrollTo(0,0);
+}
+function defaultName(){
+  const first = state[0] && Object.values(state[0])[0];
+  return FORMS[cur].title + (first ? ' - ' + first : '') + ' - ' + new Date().toLocaleDateString('es-AR');
+}
+function saveRecord(){
+  const name = prompt('Nombre del registro:', defaultName());
+  if(name===null) return;
+  const id = 'r' + Date.now();
+  const rec = {app:'protocolos-monitoreo', id, name:name||defaultName(), form:cur, state, savedAt:new Date().toISOString()};
+  if(store.set('rec:'+id, JSON.stringify(rec))){
+    $('#status').textContent = 'Registro guardado ' + stamp();
+    if(!$('#recs').hidden) renderRecords();
+  } else alert('No se pudo guardar en este navegador. Usá "Descargar archivo".');
+}
+function download(){
+  const name = defaultName();
+  const rec = {app:'protocolos-monitoreo', name, form:cur, state, savedAt:new Date().toISOString()};
+  const blob = new Blob([JSON.stringify(rec, null, 1)], {type:'application/json'});
+  const a = el('a', {href:URL.createObjectURL(blob), download:name.replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'-').toLowerCase() + '.json'});
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+function loadFile(file){
+  const rd = new FileReader();
+  rd.onload = () => {
+    try{
+      const r = JSON.parse(rd.result);
+      if(r.app!=='protocolos-monitoreo' || !FORMS[r.form] || !r.state) throw new Error('formato');
+      openRecord(r);
+    }catch(e){ alert('El archivo no es una hoja válida de esta página.'); }
+  };
+  rd.readAsText(file);
+}
+
+/* ---- Inicio ---- */
+$('#nav').append(el('button', {'data-id':'home', onclick:() => show('home')}, 'Inicio'));
+ORDER.forEach(id => {
+  $('#nav').append(el('button', {'data-id':id, onclick:() => show(id)}, FORMS[id].title));
+});
+$('#bNew').onclick = () => {
+  if(confirm('¿Empezar una hoja nueva? Se borra lo que está en pantalla (los registros guardados no se tocan).')){
+    state = initState(FORMS[cur]); save(); render();
+  }
+};
+$('#bSave').onclick = saveRecord;
+$('#bRecs').onclick = () => { const r=$('#recs'); r.hidden = !r.hidden; if(!r.hidden) renderRecords(); };
+$('#bDown').onclick = download;
+$('#fLoad').onchange = e => { if(e.target.files[0]) loadFile(e.target.files[0]); e.target.value=''; };
+$('#bPrint').onclick = () => { fitAll(); window.print(); };
+window.addEventListener('beforeprint', fitAll);
+show('home');
+</script>
+</body>
+</html>
